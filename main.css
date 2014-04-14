@@ -1,0 +1,37 @@
+body { padding: 0; margin: 0; }
+div { padding: 0; margin: 0 }
+
+#mainImg {
+  width: 100%; height: 100%;
+  background: none no-repeat center center fixed; 
+  background-color: black;
+  background-size: cover;
+}
+
+#forwards {
+  width: 60%; height: 80%;
+  position: absolute; top: 10%; left: 20%;
+}
+#forwards.active {
+  background-color: green; opacity: 0.5;
+  cursor: pointer;
+}
+
+#left {
+  width: 20%; height: 80%;
+  position: absolute; left: 0; top: 10%;
+}
+#left.active {
+  background-color: red; opacity: 0.5;
+  cursor: w-resize;
+}
+
+#right {
+  width: 20%; height: 80%;
+  position: absolute; right: 0; top: 10%;
+}
+#right.active {
+  background-color: blue; opacity: 0.5;
+  cursor: e-resize;
+}
+
