@@ -1,16 +1,5 @@
 
 $(function() {
-  var $mainImg = $('#mainImg');
-  var $forwards = $('#forwards');
-  var $left = $('#left');
-  var $right = $('#right');
-
-  $forwards.click(forwards);
-  $left.click(left);
-  $right.click(right);
-
-  var Direction = { NORTH: 'north', EAST: 'east', SOUTH: 'south', WEST: 'west' };
-  var Turn = { LEFT: 'left', RIGHT: 'right' };
 
   var map = [];
   map[0] = [];
@@ -21,76 +10,95 @@ $(function() {
   setPosition(0, 0, "north");
 
   function setPosition(x, y, direction) {
-    console.log("Position: " + x + ", " + y + " " + direction);
+    var state = new State(x, y, direction);
+    render(state);
+  }
+
+  function State(x, y, direction) {
+    this.x = x;
+    this.y = y;
+    this.direction = direction;
 
     var cell = map[x][y];
-    var img = 'url(' + cell[direction] + '.jpg)';
-
-    $mainImg.css('background-image', img);
+    this.img = cell[direction];
 
     var forwardsCoords = getForwardsCoords(x, y, direction);
-    var forwardsActive = cellExists(forwardsCoords.x, forwardsCoords.y);
+    this.forwardsX = forwardsCoords.x;
+    this.forwardsY = forwardsCoords.y;
+    this.forwardsActive = cellExists(forwardsCoords.x, forwardsCoords.y);
 
-    toggleActive($forwards, forwardsActive);
+    this.leftDirection = getTurnDirection(direction, "left");
+    this.leftActive = typeof cell[this.leftDirection] !== 'undefined';
+    this.rightDirection = getTurnDirection(direction, "right");
+    this.rightActive = typeof cell[this.rightDirection] !== 'undefined';
 
-    var leftDirection = getTurnDirection(direction, "left");
-    var leftActive = typeof cell[leftDirection] !== 'undefined';
-    var rightDirection = getTurnDirection(direction, "right");
-    var rightActive = typeof cell[rightDirection] !== 'undefined';
+    function getTurnDirection(direction, turn) {
+      var turns = {
+        "north": { "left": "west", "right": "east" },
+        "east": { "left": "north", "right": "south" },
+        "south": { "left": "east", "right": "west" },
+        "west": { "left": "south", "right": "north" }
+      };
+      return turns[direction][turn];
+    }
 
-    toggleActive($left, leftActive);
-    toggleActive($right, rightActive);
+    function getForwardsCoords(x, y, direction) {
+      var forwardDeltas = {
+        "north": { x: 0, y: 1 },
+        "east": { x: 1, y: 0 },
+        "south": { x: 0, y: -1 },
+        "west": { x: -1, y: 0 },
+      }
+      var deltas = forwardDeltas[direction];
+      return { x: x + deltas.x, y: y + deltas.y }
+    }
+
+    function cellExists(x, y) {
+      if (!map[x]) return false;
+      if (!map[x][y]) return false;
+      return true;
+    }
+  }
+
+  function render(state) {
+    console.log("Position: " + state.x + ", " + state.y + " " + state.direction);
+
+    var $mainImg = $('#mainImg');
+    var $forwards = $('#forwards');
+    var $left = $('#left');
+    var $right = $('#right');
+
+    var imgUrl = 'url(' + state.img + '.jpg)';
+    $mainImg.css('background-image', imgUrl);
 
     $forwards.off();
     $left.off();
     $right.off();
 
-    if (forwardsActive) {
+    if (state.forwardsActive) {
       $forwards.on('click', function() {
-        setPosition(forwardsCoords.x, forwardsCoords.y, direction);
+        setPosition(state.forwardsX, state.forwardsY, state.direction);
       });
     }
-    if (leftActive) {
+    if (state.leftActive) {
       $left.on('click', function() {
-        setPosition(x, y, leftDirection);
+        setPosition(state.x, state.y, state.leftDirection);
       });
     }
-    if (rightActive) {
+    if (state.rightActive) {
       $right.off().on('click', function() {
-        setPosition(x, y, rightDirection);
+        setPosition(state.x, state.y, state.rightDirection);
       });
     }
+
+    toggleActive($forwards, state.forwardsActive);
+    toggleActive($left, state.leftActive);
+    toggleActive($right, state.rightActive);
 
     function toggleActive($elem, active) {
       $elem.toggleClass('active', active);
     }
   }
 
-  function getTurnDirection(direction, turn) {
-    var turns = {
-      "north": { "left": "west", "right": "east" },
-      "east": { "left": "north", "right": "south" },
-      "south": { "left": "east", "right": "west" },
-      "west": { "left": "south", "right": "north" }
-    };
-    return turns[direction][turn];
-  }
-
-  function getForwardsCoords(x, y, direction) {
-    var forwardDeltas = {
-      "north": { x: 0, y: 1 },
-      "east": { x: 1, y: 0 },
-      "south": { x: 0, y: -1 },
-      "west": { x: -1, y: 0 },
-    }
-    var deltas = forwardDeltas[direction];
-    return { x: x + deltas.x, y: y + deltas.y }
-  }
-
-  function cellExists(x, y) {
-    if (!map[x]) return false;
-    if (!map[x][y]) return false;
-    return true;
-  }
 
 });
