@@ -7,30 +7,38 @@ $(function() {
   map[1] = [];
   map[1][0] = { north: 'img1', east: 'img1', south: 'img1', west: 'img1' };
   
-  setPosition(0, 0, "north");
+  setPosition(new Position(0, 0, "north"));
 
-  function setPosition(x, y, direction) {
-    var state = new State(x, y, direction);
-    render(state);
+  function setPosition(pos) {
+    console.log(pos);
+    var uiState = new UiState(pos);
+    render(uiState);
   }
 
-  function State(x, y, direction) {
+  function Position(x, y, direction) {
     this.x = x;
     this.y = y;
     this.direction = direction;
+  }
 
-    var cell = map[x][y];
-    this.img = cell[direction];
+  function UiState(pos) {
+    this.pos = pos;
 
-    var forwardsCoords = getForwardsCoords(x, y, direction);
-    this.forwardsX = forwardsCoords.x;
-    this.forwardsY = forwardsCoords.y;
-    this.forwardsActive = cellExists(forwardsCoords.x, forwardsCoords.y);
+    var cell = map[pos.x][pos.y];
+    this.img = cell[pos.direction];
 
-    this.leftDirection = getTurnDirection(direction, "left");
-    this.leftActive = typeof cell[this.leftDirection] !== 'undefined';
-    this.rightDirection = getTurnDirection(direction, "right");
-    this.rightActive = typeof cell[this.rightDirection] !== 'undefined';
+    this.forwardsPos = getForwardsPosition(pos);
+    this.leftPos = getTurnPosition(pos, "left");
+    this.rightPos = getTurnPosition(pos, "right");
+
+    this.forwardsActive = positionExists(this.forwardsPos);
+    this.leftActive = positionExists(this.leftPos);
+    this.rightActive = positionExists(this.rightPos);
+
+    function getTurnPosition(pos, turn) {
+      var turnDirection = getTurnDirection(pos.direction, turn);
+      return new Position(pos.x, pos.y, turnDirection);
+    }
 
     function getTurnDirection(direction, turn) {
       var turns = {
@@ -42,15 +50,20 @@ $(function() {
       return turns[direction][turn];
     }
 
-    function getForwardsCoords(x, y, direction) {
+    function getForwardsPosition(pos) {
       var forwardDeltas = {
         "north": { x: 0, y: 1 },
         "east": { x: 1, y: 0 },
         "south": { x: 0, y: -1 },
         "west": { x: -1, y: 0 },
       }
-      var deltas = forwardDeltas[direction];
-      return { x: x + deltas.x, y: y + deltas.y }
+      var deltas = forwardDeltas[pos.direction];
+      return new Position(pos.x + deltas.x, pos.y + deltas.y, pos.direction);
+    }
+
+    function positionExists(pos) {
+      if (!cellExists(pos.x, pos.y)) return false;
+      return typeof map[pos.x][pos.y][pos.direction] !== 'undefined';
     }
 
     function cellExists(x, y) {
@@ -60,45 +73,42 @@ $(function() {
     }
   }
 
-  function render(state) {
-    console.log("Position: " + state.x + ", " + state.y + " " + state.direction);
-
+  function render(uiState) {
     var $mainImg = $('#mainImg');
     var $forwards = $('#forwards');
     var $left = $('#left');
     var $right = $('#right');
 
-    var imgUrl = 'url(' + state.img + '.jpg)';
+    var imgUrl = 'url(' + uiState.img + '.jpg)';
     $mainImg.css('background-image', imgUrl);
 
     $forwards.off();
     $left.off();
     $right.off();
 
-    if (state.forwardsActive) {
+    if (uiState.forwardsActive) {
       $forwards.on('click', function() {
-        setPosition(state.forwardsX, state.forwardsY, state.direction);
+        setPosition(uiState.forwardsPos);
       });
     }
-    if (state.leftActive) {
+    if (uiState.leftActive) {
       $left.on('click', function() {
-        setPosition(state.x, state.y, state.leftDirection);
+        setPosition(uiState.leftPos);
       });
     }
-    if (state.rightActive) {
+    if (uiState.rightActive) {
       $right.off().on('click', function() {
-        setPosition(state.x, state.y, state.rightDirection);
+        setPosition(uiState.rightPos);
       });
     }
 
-    toggleActive($forwards, state.forwardsActive);
-    toggleActive($left, state.leftActive);
-    toggleActive($right, state.rightActive);
+    toggleActive($forwards, uiState.forwardsActive);
+    toggleActive($left, uiState.leftActive);
+    toggleActive($right, uiState.rightActive);
 
     function toggleActive($elem, active) {
       $elem.toggleClass('active', active);
     }
   }
-
 
 });
