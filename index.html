@@ -1,8 +1,12 @@
 <html>
 <head>
   <link rel="stylesheet" href="main.css">
-  <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
-  <script src="core.js"></script>
+  <script src="jam/require.js"></script>
+  <script>
+    require(['mead/main'], function (app) {
+      app.init();
+    });
+  </script>
 </head>
 <body>
 

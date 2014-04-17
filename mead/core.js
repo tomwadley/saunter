@@ -1,18 +1,18 @@
+define('mead/core', [
+  'jquery'
+],
+function ($) {
 
-$(function() {
+  return {
+    init: function(map, x, y, direction) {
+      setPosition(new Position(x, y, direction), map);
+    }
+  }
 
-  var map = [];
-  map[0] = [];
-  map[0][0] = { north: 'img1', east: 'img1', south: 'img1' };
-  map[1] = [];
-  map[1][0] = { north: 'img1', east: 'img1', south: 'img1', west: 'img1' };
-  
-  setPosition(new Position(0, 0, "north"));
-
-  function setPosition(pos) {
+  function setPosition(pos, map) {
     console.log(pos);
-    var uiState = new UiState(pos);
-    render(uiState);
+    var uiState = new UiState(pos, map);
+    render(uiState, map);
   }
 
   function Position(x, y, direction) {
@@ -21,7 +21,7 @@ $(function() {
     this.direction = direction;
   }
 
-  function UiState(pos) {
+  function UiState(pos, map) {
     this.pos = pos;
 
     var cell = map[pos.x][pos.y];
@@ -73,7 +73,7 @@ $(function() {
     }
   }
 
-  function render(uiState) {
+  function render(uiState, map) {
     var $mainImg = $('#mainImg');
     var $forwards = $('#forwards');
     var $left = $('#left');
@@ -88,17 +88,17 @@ $(function() {
 
     if (uiState.forwardsActive) {
       $forwards.on('click', function() {
-        setPosition(uiState.forwardsPos);
+        setPosition(uiState.forwardsPos, map);
       });
     }
     if (uiState.leftActive) {
       $left.on('click', function() {
-        setPosition(uiState.leftPos);
+        setPosition(uiState.leftPos, map);
       });
     }
     if (uiState.rightActive) {
       $right.off().on('click', function() {
-        setPosition(uiState.rightPos);
+        setPosition(uiState.rightPos, map);
       });
     }
 
