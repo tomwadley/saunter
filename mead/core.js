@@ -79,8 +79,7 @@ function ($) {
     var $left = $('#left');
     var $right = $('#right');
 
-    var imgUrl = 'url(' + uiState.img + '.jpg)';
-    $mainImg.css('background-image', imgUrl);
+    setImg(uiState.img);
 
     $forwards.off();
     $left.off();
@@ -105,6 +104,18 @@ function ($) {
     toggleActive($forwards, uiState.forwardsActive);
     toggleActive($left, uiState.leftActive);
     toggleActive($right, uiState.rightActive);
+
+    function setImg(imgName) {
+      var $img = $mainImg.find('.img#img_' + imgName);
+      if ($img.length == 0) {
+        $img = $('<div id="img_' + imgName + '" class="img"></div>');
+        var imgUrl = 'url(' + uiState.img + '.jpg)';
+        $img.css('background-image', imgUrl);
+        $mainImg.append($img);
+      }
+      $img.addClass('active');
+      $mainImg.find('.img:not(#img_' + imgName + ')').removeClass('active');
+    }
 
     function toggleActive($elem, active) {
       $elem.toggleClass('active', active);
