@@ -114,16 +114,22 @@ function ($) {
     this.img = cell[pos.direction];
 
     this.forwardsPos = getForwardsPosition(pos);
-    this.leftPos = getTurnPosition(pos, "left");
-    this.rightPos = getTurnPosition(pos, "right");
+    this.leftPos = getTurnPosition(pos, "left", 2);
+    this.rightPos = getTurnPosition(pos, "right", 2);
 
     this.forwardsActive = positionExists(this.forwardsPos);
     this.leftActive = positionExists(this.leftPos);
     this.rightActive = positionExists(this.rightPos);
 
-    function getTurnPosition(pos, turn) {
-      var turnDirection = getTurnDirection(pos.direction, turn);
-      return new Position(pos.x, pos.y, turnDirection);
+    function getTurnPosition(pos, turn, tries) {
+      for (var i = 0; i < tries; i++) {
+        var turnDirection = getTurnDirection(pos.direction, turn);
+        pos = new Position(pos.x, pos.y, turnDirection);
+        if (positionExists(pos)) {
+          return pos;
+        }
+      }
+      return false;
     }
 
     function getTurnDirection(direction, turn) {
@@ -148,6 +154,7 @@ function ($) {
     }
 
     function positionExists(pos) {
+      if (!pos) return false;
       var cell = getCell(map, pos.x, pos.y);
       if (!cell) return false;
       return typeof cell[pos.direction] !== 'undefined';
