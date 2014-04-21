@@ -4,8 +4,9 @@ define('mead/core', [
 function ($) {
 
   return {
-    init: function(mapUrl) {
+    init: function(mapUrl, callbacks) {
       loadMap(mapUrl, function(init, map) {
+        attachCallbacks(map, callbacks);
         $(function() {
           setPosition(init, map);
         });
@@ -69,9 +70,34 @@ function ($) {
     }
   }
 
+  function attachCallbacks(map, callbacks) {
+    console.log('Callbacks: ' + callbacks.length);
+    for (var i = 0; i < callbacks.length; i++) {
+      var callback = callbacks[i];
+      var cell = getCell(map, callback.x, callback.y);
+      if (cell && cell[callback.direction]) {
+        cell[callback.direction + '_callback'] = callback.func;
+      } else {
+        var pos = new Position(callback.x, callback.y, callback.direction);
+        console.log('Warning: Callback specified for non-existant pos: ', pos);
+      }
+    }
+  }
+
+  function tryCallback(pos, map, uiState) {
+    var cell = getCell(map, pos.x, pos.y);
+    if (cell) {
+      var callback = cell[pos.direction + '_callback'];
+      if (callback) {
+        callback(uiState);
+      }
+    }
+  }
+
   function setPosition(pos, map) {
     console.log(pos);
     var uiState = new UiState(pos, map);
+    tryCallback(pos, map, uiState);
     render(uiState, map);
   }
 
@@ -122,15 +148,16 @@ function ($) {
     }
 
     function positionExists(pos) {
-      if (!cellExists(pos.x, pos.y)) return false;
-      return typeof map[pos.x][pos.y][pos.direction] !== 'undefined';
+      var cell = getCell(map, pos.x, pos.y);
+      if (!cell) return false;
+      return typeof cell[pos.direction] !== 'undefined';
     }
+  }
 
-    function cellExists(x, y) {
-      if (!map[x]) return false;
-      if (!map[x][y]) return false;
-      return true;
-    }
+  function getCell(map, x, y) {
+    if (!map[x]) return false;
+    if (!map[x][y]) return false;
+    return map[x][y];
   }
 
   function render(uiState, map) {
