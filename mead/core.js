@@ -121,6 +121,8 @@ function ($) {
     this.leftActive = positionExists(this.leftPos);
     this.rightActive = positionExists(this.rightPos);
 
+    this.surroundingImages = getSurroundingImages(cell, 1);
+
     function getTurnPosition(pos, turn, tries) {
       for (var i = 0; i < tries; i++) {
         var turnDirection = getTurnDirection(pos.direction, turn);
@@ -159,6 +161,26 @@ function ($) {
       if (!cell) return false;
       return typeof cell[pos.direction] !== 'undefined';
     }
+
+    function getSurroundingImages(cell, depth) {
+      var imgs = [];
+      if (cell.north) addAndTryDirection(cell, "north");
+      if (cell.east) addAndTryDirection(cell, "east");
+      if (cell.south) addAndTryDirection(cell, "south");
+      if (cell.west) addAndTryDirection(cell, "west");
+      
+      function addAndTryDirection(cell, direction) {
+        imgs.push(cell[direction]);
+        if (depth > 0) {
+          var pos = getForwardsPosition(new Position(cell.x, cell.y, direction));
+          if (positionExists(pos)) {
+            var cell = map[pos.x][pos.y];
+            imgs = imgs.concat(getSurroundingImages(cell, depth - 1));
+          }
+        }
+      }
+      return imgs;
+    }
   }
 
   function getCell(map, x, y) {
@@ -190,7 +212,7 @@ function ($) {
       });
     }
     if (uiState.rightActive) {
-      $right.off().on('click', function() {
+      $right.on('click', function() {
         setPosition(uiState.rightPos, map);
       });
     }
@@ -198,6 +220,8 @@ function ($) {
     toggleActive($forwards, uiState.forwardsActive);
     toggleActive($left, uiState.leftActive);
     toggleActive($right, uiState.rightActive);
+
+    updateImageCache(uiState.surroundingImages);
 
     function setImg(imgName) {
       var $img = getImage(imgName);
@@ -207,6 +231,19 @@ function ($) {
 
     function toggleActive($elem, active) {
       $elem.toggleClass('active', active);
+    }
+
+    function updateImageCache(imgs) {
+      var $mainImg = $('#mainImg');
+      $mainImg.find('.img').each(function(i, $img) {
+        var imgName = $img.id.substring("img_".length);
+        if ($.inArray(imgName, imgs) == -1) {
+          $img.remove();
+        }
+      });
+      $.each(imgs, function(i, img) {
+        getImage(img);
+      });
     }
   }
 
