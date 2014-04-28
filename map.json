@@ -1,5 +1,11 @@
 {
-  "metadata": { "name": "test-map", "version": "0.0", "description": "A test map" },
+  "metadata": { 
+    "name": "test-map", 
+    "version": "0.0", 
+    "description": "A test map", 
+    "imagePrefix": "map/",
+    "imageSuffix": ".jpg"
+  },
   "init": { "x": 0, "y": 0, "direction": "north" },
   "cells": [
     { "x": 0, "y": 0, "north": "img1", "east": "img2", "south": "img1" },

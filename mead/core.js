@@ -5,10 +5,10 @@ function ($) {
 
   return {
     init: function(mapUrl, callbacks) {
-      loadMap(mapUrl, function(init, map) {
+      loadMap(mapUrl, function(init, map, getImageUrl) {
         attachCallbacks(map, callbacks);
         $(function() {
-          setPosition(init, map);
+          setPosition(init, map, getImageUrl);
         });
       });
     }
@@ -19,9 +19,14 @@ function ($) {
     $.get(mapUrl)
     .success(function(data) {
       var metadata = parseMetadata(data);
+      var getImageUrl = function(imgName) {
+        var prefix = metadata.imagePrefix || '';
+        var suffix = metadata.imageSuffix || '.jpg';
+        return prefix + imgName + suffix;
+      };
       var init = parseInit(data);
-      var map = parseCells(data);
-      successFunc(init, map);
+      var map = parseCells(data, getImageUrl);
+      successFunc(init, map, getImageUrl);
     })
     .error(function() {
       alert('Failed to load map "' + mapUrl + '"');
@@ -32,6 +37,7 @@ function ($) {
       console.log('Map name: ' + metadata.name);
       console.log('Map version: ' + metadata.version);
       console.log('Map description: ' + metadata.description);
+      return metadata;
     }
 
     function parseInit(data) {
@@ -44,7 +50,7 @@ function ($) {
       return pos;
     }
 
-    function parseCells(data) {
+    function parseCells(data, getImageUrl) {
       var map = [];
       var cells = data.cells || [];
       console.log('Cells: ' + cells.length);
@@ -60,10 +66,10 @@ function ($) {
         map[cell.x][cell.y] = cell;
 
         $(function() {
-          if (cell.north) getImage(cell.north);
-          if (cell.east) getImage(cell.east);
-          if (cell.south) getImage(cell.south);
-          if (cell.west) getImage(cell.west);
+          if (cell.north) getImage(cell.north, getImageUrl);
+          if (cell.east) getImage(cell.east, getImageUrl);
+          if (cell.south) getImage(cell.south, getImageUrl);
+          if (cell.west) getImage(cell.west, getImageUrl);
         });
       }
       return map;
@@ -94,11 +100,11 @@ function ($) {
     }
   }
 
-  function setPosition(pos, map) {
+  function setPosition(pos, map, getImageUrl) {
     console.log(pos);
     var uiState = new UiState(pos, map);
     tryCallback(pos, map, uiState);
-    render(uiState, map);
+    render(uiState, map, getImageUrl);
   }
 
   function Position(x, y, direction) {
@@ -181,7 +187,7 @@ function ($) {
     return map[x][y];
   }
 
-  function render(uiState, map) {
+  function render(uiState, map, getImageUrl) {
     var $mainImg = $('#mainImg');
     var $forwards = $('#forwards');
     var $left = $('#left');
@@ -195,17 +201,17 @@ function ($) {
 
     if (uiState.forwardsActive) {
       $forwards.on('click', function() {
-        setPosition(uiState.forwardsPos, map);
+        setPosition(uiState.forwardsPos, map, getImageUrl);
       });
     }
     if (uiState.leftActive) {
       $left.on('click', function() {
-        setPosition(uiState.leftPos, map);
+        setPosition(uiState.leftPos, map, getImageUrl);
       });
     }
     if (uiState.rightActive) {
       $right.on('click', function() {
-        setPosition(uiState.rightPos, map);
+        setPosition(uiState.rightPos, map, getImageUrl);
       });
     }
 
@@ -216,7 +222,7 @@ function ($) {
     updateImageCache(uiState.surroundingImages);
 
     function setImg(imgName) {
-      var $img = getImage(imgName);
+      var $img = getImage(imgName, getImageUrl);
       $img.addClass('active');
       $mainImg.find('.img:not(#img_' + imgName + ')').removeClass('active');
     }
@@ -234,17 +240,17 @@ function ($) {
         }
       });
       $.each(imgs, function(i, img) {
-        getImage(img);
+        getImage(img, getImageUrl);
       });
     }
   }
 
-  function getImage(imgName) {
+  function getImage(imgName, getImageUrl) {
     var $mainImg = $('#mainImg');
     var $img = $mainImg.find('.img#img_' + imgName);
     if ($img.length == 0) {
       $img = $('<div id="img_' + imgName + '" class="img"></div>');
-      var imgUrl = 'url(' + imgName + '.jpg)';
+      var imgUrl = 'url(' + getImageUrl(imgName) + ')';
       $img.css('background-image', imgUrl);
       $mainImg.append($img);
     }
