@@ -121,7 +121,7 @@ function ($) {
     this.leftActive = positionExists(this.leftPos);
     this.rightActive = positionExists(this.rightPos);
 
-    this.surroundingImages = getSurroundingImages(cell, 1);
+    this.surroundingImages = getSurroundingImages(this, map);
 
     function getTurnPosition(pos, turn, tries) {
       for (var i = 0; i < tries; i++) {
@@ -162,22 +162,14 @@ function ($) {
       return typeof cell[pos.direction] !== 'undefined';
     }
 
-    function getSurroundingImages(cell, depth) {
-      var imgs = [];
-      if (cell.north) addAndTryDirection(cell, "north");
-      if (cell.east) addAndTryDirection(cell, "east");
-      if (cell.south) addAndTryDirection(cell, "south");
-      if (cell.west) addAndTryDirection(cell, "west");
-      
-      function addAndTryDirection(cell, direction) {
-        imgs.push(cell[direction]);
-        if (depth > 0) {
-          var pos = getForwardsPosition(new Position(cell.x, cell.y, direction));
-          if (positionExists(pos)) {
-            var cell = map[pos.x][pos.y];
-            imgs = imgs.concat(getSurroundingImages(cell, depth - 1));
-          }
-        }
+    function getSurroundingImages(uiState, map) {
+      var imgs = [ uiState.img ];
+      if (uiState.forwardsActive) addPos(uiState.forwardsPos);
+      if (uiState.leftActive) addPos(uiState.leftPos);
+      if (uiState.rightActive) addPos(uiState.rightPos);
+      function addPos(pos) {
+        var cell = getCell(map, pos.x, pos.y);
+        imgs.push(cell[pos.direction]);
       }
       return imgs;
     }
