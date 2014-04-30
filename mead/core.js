@@ -25,8 +25,9 @@ function ($) {
         return prefix + imgName + suffix;
       };
       var init = parseInit(data);
-      var map = parseCells(data, getImageUrl);
-      successFunc(init, map, getImageUrl);
+      parseCells(data, getImageUrl, function(map) {
+        successFunc(init, map, getImageUrl);
+      });
     })
     .error(function() {
       alert('Failed to load map "' + mapUrl + '"');
@@ -50,9 +51,10 @@ function ($) {
       return pos;
     }
 
-    function parseCells(data, getImageUrl) {
+    function parseCells(data, getImageUrl, successFunc) {
       var map = [];
       var cells = data.cells || [];
+      var imgNames = [];
       console.log('Cells: ' + cells.length);
       if (cells.length == 0) {
         console.log('Error: No cells found!');
@@ -65,14 +67,28 @@ function ($) {
         }
         map[cell.x][cell.y] = cell;
 
-        $(function() {
-          if (cell.north) getImage(cell.north, getImageUrl);
-          if (cell.east) getImage(cell.east, getImageUrl);
-          if (cell.south) getImage(cell.south, getImageUrl);
-          if (cell.west) getImage(cell.west, getImageUrl);
-        });
+        if (cell.north) imgNames.push(cell.north);
+        if (cell.east) imgNames.push(cell.east);
+        if (cell.south) imgNames.push(cell.south);
+        if (cell.west) imgNames.push(cell.west);
       }
-      return map;
+      $(function() {
+        preloadImages(imgNames, getImageUrl, function() {
+          successFunc(map);
+        });
+      });
+    }
+
+    function preloadImages(imgNames, getImageUrl, successFunc) {
+      var gets = []
+      $.each(imgNames, function(i, imgName) {
+        var imgUrl = getImageUrl(imgName);
+        gets.push($.get(imgUrl));
+      });
+      $.when(gets).then(function() {
+        console.log('Preloaded ' + gets.length + ' images');
+        successFunc();
+      });
     }
   }
 
