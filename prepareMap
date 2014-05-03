@@ -1,0 +1,65 @@
+#!/usr/bin/env node
+var fs = require('fs');
+var glob = require("glob")
+
+var args = process.argv.slice(2);
+
+if (args.length != 1) {
+  console.log('Usage: prepareMap mapSourceFile');
+}
+
+var mapFile = args[0];
+
+fs.readFile(mapFile, { encoding: 'utf8' }, function(err, data) {
+  if (err) throw err;
+  var mapSource = JSON.parse(data);
+  var prefix = mapSource.metadata.imagePrefix || ''; 
+  var suffix = mapSource.metadata.imageSuffix || ''; 
+  getCells(prefix, suffix, function(cells) {
+    mapSource.cells = cells;
+    var json = JSON.stringify(mapSource, null, ' ');
+    process.stdout.write(json);
+  });
+});
+
+function getCells(prefix, suffix, cb) {
+  var cells = [];
+  var cell = null;
+  glob(prefix + '*' + suffix, function(err, files) {
+    if (err) throw err;
+    files.sort();
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      var name = file.substring(prefix.length, file.length - suffix.length);
+      var components = /^(\d+)_(\d+)([a-z]+)$/.exec(name);
+      var x = components[1];
+      var y = components[2];
+      var d = components[3];
+
+      if (cell === null) {
+        cell = { x: x, y: y };
+      }
+      if (cell.x != x || cell.y != y) {
+        cells.push(cell);
+        cell = { x: x, y: y };
+      }
+      var direction = getDirection(d);
+      if (direction === null) {
+        throw new Error('Unknown direction: ' + d);
+      }
+      cell[direction] = name;
+    }
+    if (cell !== null) {
+      cells.push(cell);
+    }
+    cb(cells);
+  });
+}
+
+function getDirection(d) {
+  if (d == 'n') return 'north';
+  if (d == 'e') return 'east';
+  if (d == 's') return 'south';
+  if (d == 'w') return 'west';
+  return null;
+}
