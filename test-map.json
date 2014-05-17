@@ -3,8 +3,8 @@
     "name": "test-map", 
     "version": "0.0", 
     "description": "A test map", 
-    "imagePrefix": "map/",
-    "imageSuffix": ".jpg"
+    "imagePrefix": "test-map/",
+    "imageSuffix": ".png"
   },
   "init": { "x": 0, "y": 0, "direction": "north" }
 }
