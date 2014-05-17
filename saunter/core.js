@@ -1,4 +1,4 @@
-define('mead/core', [
+define('saunter/core', [
   'jquery'
 ],
 function ($) {

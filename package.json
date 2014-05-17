@@ -1,7 +1,7 @@
 {
-  "name": "mead",
+  "name": "saunter",
   "version": "0.0.0",
-  "description": "Mead",
+  "description": "A point-and-click game similar to Myst",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
