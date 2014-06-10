@@ -1,28 +1,48 @@
 #!/usr/bin/env node
 var fs = require('fs');
 var glob = require("glob")
+var mkpath = require('mkpath');
 
 var args = process.argv.slice(2);
 
-if (args.length != 1) {
-  console.log('Usage: prepareMap mapSourceFile');
+if (args.length < 1 || args.length > 2) {
+  printUsage();
+} else {
+  var mapFile = args[0];
+  var dest = args[1] ? args[1] : '.';
+  prepareMap(mapFile, dest);
 }
 
-var mapFile = args[0];
+function printUsage() {
+  console.log('Usage: prepareMap mapSourceFile [destination]');
+  console.log('If you specify a destination, map.json and the associated images will be put there.');
+  console.log('Otherwise, map.json will be written to the current directory.');
+}
 
-fs.readFile(mapFile, { encoding: 'utf8' }, function(err, data) {
-  if (err) throw err;
-  var mapSource = JSON.parse(data);
-  var prefix = mapSource.metadata.imagePrefix || ''; 
-  var suffix = mapSource.metadata.imageSuffix || ''; 
-  getCells(prefix, suffix, function(cells) {
-    mapSource.cells = cells;
-    var json = JSON.stringify(mapSource, null, ' ');
-    process.stdout.write(json);
+function prepareMap(mapFile, dest) {
+  fs.readFile(mapFile, { encoding: 'utf8' }, function(err, data) {
+    if (err) throw err;
+    var mapSource = JSON.parse(data);
+    var prefix = mapSource.metadata.imagePrefix || ''; 
+    var suffix = mapSource.metadata.imageSuffix || ''; 
+    processFiles(prefix, suffix, function(file) {
+      if (dest == '.') return;
+      // todo: Path handling is bad in this script - the following line is the worst offender
+      var dir = file.replace(/\/[^\/]*$/, ""); 
+      mkpath.sync(dest + '/' + dir);
+      var source = fs.readFileSync(file);
+      var target = dest + '/' + file;
+      fs.writeFileSync(target, source);
+    }, function(cells) {
+      mapSource.cells = cells;
+      var json = JSON.stringify(mapSource, null, ' ');
+      var mapOutputFile = dest + '/map.json'
+      fs.writeFileSync(mapOutputFile, json);
+    });
   });
-});
+}
 
-function getCells(prefix, suffix, cb) {
+function processFiles(prefix, suffix, fileCallback, cellsCallback) {
   var cells = [];
   var cell = null;
   glob(prefix + '*' + suffix, function(err, files) {
@@ -48,11 +68,13 @@ function getCells(prefix, suffix, cb) {
         throw new Error('Unknown direction: ' + d);
       }
       cell[direction] = name;
+
+      fileCallback(file);
     }
     if (cell !== null) {
       cells.push(cell);
     }
-    cb(cells);
+    cellsCallback(cells);
   });
 }
 

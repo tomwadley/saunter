@@ -1,4 +1,6 @@
 /jam
 /node_modules
 
-map.json
+/build
+/compiled.js
+/map.json
