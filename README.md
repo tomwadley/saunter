@@ -4,11 +4,15 @@ A point-and-click style game inspired by Myst. The game is web based, written in
 
 ## Building
 
-You will need `npm` to fetch dependencies. To do this, run:
+You will need `npm` to fetch dependencies. You'll also need `grunt` if you don't have it already:
+
+    sudo npm install -g grunt-cli
+
+Then, to fetch the remaining dependencies:
 
     npm install
 
-To build, run:
+To build:
 
     grunt
 

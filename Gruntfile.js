@@ -5,8 +5,8 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     exec: {
-      jamInstall: 'jam install',
-      jamCompile: 'jam compile -i saunter/main -o compiled.js',
+      jamInstall: '$(npm bin)/jam install',
+      jamCompile: '$(npm bin)/jam compile -i saunter/main -o compiled.js',
       prepareMapProd: ('./prepareMap ' + map + ' ' + BUILD_DIR),
       prepareMapDev: ('./prepareMap ' + map)
     },
