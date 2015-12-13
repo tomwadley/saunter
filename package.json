@@ -5,7 +5,10 @@
   "main": "main.js",
   "author": "Tom Wadley",
   "license": "ISC",
-  "repository": { "type": "git", "url": "https://github.com/tomwadley/saunter.git" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tomwadley/saunter.git"
+  },
   "jam": {
     "dependencies": {
       "jquery": "2.0.0"
@@ -17,8 +20,10 @@
     "grunt-cache-bust": "^0.3.6",
     "grunt-contrib-clean": "^0.5.0",
     "grunt-contrib-copy": "^0.5.0",
+    "grunt-curl": "^2.2.0",
     "grunt-exec": "^0.4.5",
     "grunt-replace": "^0.7.7",
+    "grunt-zip": "^0.17.1",
     "jamjs": "^0.2.17",
     "mkpath": "^0.1.0"
   }

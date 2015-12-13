@@ -10,6 +10,21 @@ module.exports = function(grunt) {
       prepareMapProd: ('./prepareMap ' + map + ' ' + BUILD_DIR),
       prepareMapDev: ('./prepareMap ' + map)
     },
+    curl: {
+      photo_sphere_viewer: {
+        src: 'https://github.com/JeremyHeleine/Photo-Sphere-Viewer/archive/v2.5.zip',
+        dest: 'tmp/photo-sphere-viewer.zip'
+      }
+    },
+    unzip: {
+      photo_sphere_viewer: {
+        src: 'tmp/photo-sphere-viewer.zip',
+        dest: 'vendor/photo-sphere-viewer/',
+        router: function(f) {
+          return f.substring(f.indexOf('/'));
+        }
+      }
+    },
     copy: {
       main: {
         files: [{ 
@@ -44,6 +59,8 @@ module.exports = function(grunt) {
       BUILD_DIR,
       'jam',
       'compiled.js',
+      'vendor',
+      'tmp'
     ]
   });
 
@@ -52,9 +69,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-replace');
   grunt.loadNpmTasks('grunt-cache-bust');
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-curl');
+  grunt.loadNpmTasks('grunt-zip');
 
   grunt.registerTask('prod', [
     'exec:jamInstall', 
+    'curl:photo_sphere_viewer',
+    'unzip:photo_sphere_viewer',
     'exec:jamCompile', 
     'exec:prepareMapProd', 
     'copy', 
@@ -64,6 +85,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('dev', [
     'exec:jamInstall', 
+    'curl:photo_sphere_viewer',
+    'unzip:photo_sphere_viewer',
     'exec:prepareMapDev'
   ]);
 

@@ -1,6 +1,7 @@
 /jam
 /node_modules
-
+/vendor
+/tmp
 /build
 /compiled.js
 /map.json
