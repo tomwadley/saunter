@@ -14,6 +14,20 @@ function ($) {
     }
   }
 
+  function Position(x, y, direction) {
+    this.x = x;
+    this.y = y;
+    this.direction = direction;
+  }
+
+  function Map(cellMap) {
+    this.getCell = function( x, y) {
+      if (!cellMap[x]) return false;
+      if (!cellMap[x][y]) return false;
+      return cellMap[x][y];
+    }
+  }
+
   function loadMap(mapUrl, successFunc) {
     console.log('Loading map: ' + mapUrl);
     $.get(mapUrl)
@@ -25,8 +39,8 @@ function ($) {
         return prefix + imgName + suffix;
       };
       var init = parseInit(data);
-      parseCells(data, getImageUrl, function(map) {
-        successFunc(init, map, getImageUrl);
+      parseCells(data, getImageUrl, function(cellMap) {
+        successFunc(init, new Map(cellMap), getImageUrl);
       });
     })
     .error(function() {
@@ -52,7 +66,7 @@ function ($) {
     }
 
     function parseCells(data, getImageUrl, successFunc) {
-      var map = [];
+      var cellMap = [];
       var cells = data.cells || [];
       var imgNames = [];
       console.log('Cells: ' + cells.length);
@@ -61,12 +75,13 @@ function ($) {
       }
       for (var i = 0; i < cells.length; i++) {
         var cell = cells[i];
-        if (!map[cell.x]) map[cell.x] = [];
-        if (map[cell.x][cell.y]) {
+        if (!cellMap[cell.x]) cellMap[cell.x] = [];
+        if (cellMap[cell.x][cell.y]) {
           console.log('Warning: Duplicate cell co-ord: ' + cell.x + ', ' + cell.y);
         }
-        map[cell.x][cell.y] = cell;
+        cellMap[cell.x][cell.y] = cell;
 
+        if (cell.pano) imgNames.push(cell.pano);
         if (cell.north) imgNames.push(cell.north);
         if (cell.east) imgNames.push(cell.east);
         if (cell.south) imgNames.push(cell.south);
@@ -74,7 +89,7 @@ function ($) {
       }
       $(function() {
         preloadImages(imgNames, getImageUrl, function() {
-          successFunc(map);
+          successFunc(cellMap);
         });
       });
     }
@@ -96,7 +111,7 @@ function ($) {
     console.log('Callbacks: ' + callbacks.length);
     for (var i = 0; i < callbacks.length; i++) {
       var callback = callbacks[i];
-      var cell = getCell(map, callback.x, callback.y);
+      var cell = map.getCell(callback.x, callback.y);
       if (cell && cell[callback.direction]) {
         cell[callback.direction + '_callback'] = callback.func;
       } else {
@@ -107,7 +122,7 @@ function ($) {
   }
 
   function tryCallback(pos, map, uiState) {
-    var cell = getCell(map, pos.x, pos.y);
+    var cell = map.getCell(pos.x, pos.y);
     if (cell) {
       var callback = cell[pos.direction + '_callback'];
       if (callback) {
@@ -123,16 +138,10 @@ function ($) {
     render(uiState, map, getImageUrl);
   }
 
-  function Position(x, y, direction) {
-    this.x = x;
-    this.y = y;
-    this.direction = direction;
-  }
-
   function UiState(pos, map) {
     this.pos = pos;
 
-    var cell = map[pos.x][pos.y];
+    var cell = map.getCell(pos.x, pos.y);
     this.img = cell[pos.direction];
 
     this.forwardsPos = getForwardsPosition(pos);
@@ -179,7 +188,7 @@ function ($) {
 
     function positionExists(pos) {
       if (!pos) return false;
-      var cell = getCell(map, pos.x, pos.y);
+      var cell = map.getCell(pos.x, pos.y);
       if (!cell) return false;
       return typeof cell[pos.direction] !== 'undefined';
     }
@@ -190,17 +199,11 @@ function ($) {
       if (uiState.leftActive) addPos(uiState.leftPos);
       if (uiState.rightActive) addPos(uiState.rightPos);
       function addPos(pos) {
-        var cell = getCell(map, pos.x, pos.y);
+        var cell = map.getCell(pos.x, pos.y);
         imgs.push(cell[pos.direction]);
       }
       return imgs;
     }
-  }
-
-  function getCell(map, x, y) {
-    if (!map[x]) return false;
-    if (!map[x][y]) return false;
-    return map[x][y];
   }
 
   function render(uiState, map, getImageUrl) {
@@ -259,18 +262,18 @@ function ($) {
         getImage(img, getImageUrl);
       });
     }
-  }
 
-  function getImage(imgName, getImageUrl) {
-    var $mainImg = $('#mainImg');
-    var $img = $mainImg.find('.img#img_' + imgName);
-    if ($img.length == 0) {
-      $img = $('<div id="img_' + imgName + '" class="img"></div>');
-      var imgUrl = 'url(' + getImageUrl(imgName) + ')';
-      $img.css('background-image', imgUrl);
-      $mainImg.append($img);
+    function getImage(imgName, getImageUrl) {
+        var $mainImg = $('#mainImg');
+        var $img = $mainImg.find('.img#img_' + imgName);
+        if ($img.length == 0) {
+        $img = $('<div id="img_' + imgName + '" class="img"></div>');
+        var imgUrl = 'url(' + getImageUrl(imgName) + ')';
+        $img.css('background-image', imgUrl);
+        $mainImg.append($img);
+        }
+        return $img;
     }
-    return $img;
   }
 
 });
