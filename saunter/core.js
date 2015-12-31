@@ -1,7 +1,10 @@
 define('saunter/core', [
-  'jquery'
+  'jquery',
+  'saunter/model',
+  'saunter/staticMode',
+  'saunter/panoMode'
 ],
-function ($) {
+function ($, model, staticMode, panoMode) {
 
   return {
     init: function(mapUrl, callbacks) {
@@ -11,20 +14,6 @@ function ($) {
           setPosition(init, map, getImageUrl);
         });
       });
-    }
-  }
-
-  function Position(x, y, direction) {
-    this.x = x;
-    this.y = y;
-    this.direction = direction;
-  }
-
-  function Map(cellMap) {
-    this.getCell = function( x, y) {
-      if (!cellMap[x]) return false;
-      if (!cellMap[x][y]) return false;
-      return cellMap[x][y];
     }
   }
 
@@ -40,7 +29,7 @@ function ($) {
       };
       var init = parseInit(data);
       parseCells(data, getImageUrl, function(cellMap) {
-        successFunc(init, new Map(cellMap), getImageUrl);
+        successFunc(init, new model.Map(cellMap), getImageUrl);
       });
     })
     .error(function() {
@@ -60,7 +49,7 @@ function ($) {
       if (init.x === undefined) console.log('Error: No init x co-ord defined');
       if (init.y === undefined) console.log('Error: No init y co-ord defined');
       if (init.direction == undefined) console.log('Error: No init direction defined');
-      var pos = new Position(init.x, init.y, init.direction);
+      var pos = new model.Position(init.x, init.y, init.direction);
       console.log('Init position:', pos);
       return pos;
     }
@@ -81,6 +70,7 @@ function ($) {
         }
         cellMap[cell.x][cell.y] = cell;
 
+        // TODO: make staticMode and panoMode responsible for the following:
         if (cell.pano) imgNames.push(cell.pano);
         if (cell.north) imgNames.push(cell.north);
         if (cell.east) imgNames.push(cell.east);
@@ -115,7 +105,7 @@ function ($) {
       if (cell && cell[callback.direction]) {
         cell[callback.direction + '_callback'] = callback.func;
       } else {
-        var pos = new Position(callback.x, callback.y, callback.direction);
+        var pos = new model.Position(callback.x, callback.y, callback.direction);
         console.log('Warning: Callback specified for non-existant pos: ', pos);
       }
     }
@@ -133,146 +123,15 @@ function ($) {
 
   function setPosition(pos, map, getImageUrl) {
     console.log(pos);
-    var uiState = new UiState(pos, map);
-    tryCallback(pos, map, uiState);
-    render(uiState, map, getImageUrl);
-  }
-
-  function UiState(pos, map) {
-    this.pos = pos;
-
     var cell = map.getCell(pos.x, pos.y);
-    this.img = cell[pos.direction];
-
-    this.forwardsPos = getForwardsPosition(pos);
-    this.leftPos = getTurnPosition(pos, "left", 2);
-    this.rightPos = getTurnPosition(pos, "right", 2);
-
-    this.forwardsActive = positionExists(this.forwardsPos);
-    this.leftActive = positionExists(this.leftPos);
-    this.rightActive = positionExists(this.rightPos);
-
-    this.surroundingImages = getSurroundingImages(this, map);
-
-    function getTurnPosition(pos, turn, tries) {
-      for (var i = 0; i < tries; i++) {
-        var turnDirection = getTurnDirection(pos.direction, turn);
-        pos = new Position(pos.x, pos.y, turnDirection);
-        if (positionExists(pos)) {
-          return pos;
-        }
-      }
-      return false;
-    }
-
-    function getTurnDirection(direction, turn) {
-      var turns = {
-        "north": { "left": "west", "right": "east" },
-        "east": { "left": "north", "right": "south" },
-        "south": { "left": "east", "right": "west" },
-        "west": { "left": "south", "right": "north" }
-      };
-      return turns[direction][turn];
-    }
-
-    function getForwardsPosition(pos) {
-      var forwardDeltas = {
-        "north": { x: 0, y: 1 },
-        "east": { x: 1, y: 0 },
-        "south": { x: 0, y: -1 },
-        "west": { x: -1, y: 0 },
-      }
-      var deltas = forwardDeltas[pos.direction];
-      return new Position(pos.x + deltas.x, pos.y + deltas.y, pos.direction);
-    }
-
-    function positionExists(pos) {
-      if (!pos) return false;
-      var cell = map.getCell(pos.x, pos.y);
-      if (!cell) return false;
-      return typeof cell[pos.direction] !== 'undefined';
-    }
-
-    function getSurroundingImages(uiState, map) {
-      var imgs = [ uiState.img ];
-      if (uiState.forwardsActive) addPos(uiState.forwardsPos);
-      if (uiState.leftActive) addPos(uiState.leftPos);
-      if (uiState.rightActive) addPos(uiState.rightPos);
-      function addPos(pos) {
-        var cell = map.getCell(pos.x, pos.y);
-        imgs.push(cell[pos.direction]);
-      }
-      return imgs;
-    }
-  }
-
-  function render(uiState, map, getImageUrl) {
-    var $mainImg = $('#mainImg');
-    var $forwards = $('#forwards');
-    var $left = $('#left');
-    var $right = $('#right');
-
-    setImg(uiState.img);
-
-    $forwards.off();
-    $left.off();
-    $right.off();
-
-    if (uiState.forwardsActive) {
-      $forwards.on('click', function() {
-        setPosition(uiState.forwardsPos, map, getImageUrl);
-      });
-    }
-    if (uiState.leftActive) {
-      $left.on('click', function() {
-        setPosition(uiState.leftPos, map, getImageUrl);
-      });
-    }
-    if (uiState.rightActive) {
-      $right.on('click', function() {
-        setPosition(uiState.rightPos, map, getImageUrl);
-      });
-    }
-
-    toggleActive($forwards, uiState.forwardsActive);
-    toggleActive($left, uiState.leftActive);
-    toggleActive($right, uiState.rightActive);
-
-    updateImageCache(uiState.surroundingImages);
-
-    function setImg(imgName) {
-      var $img = getImage(imgName, getImageUrl);
-      $img.addClass('active');
-      $mainImg.find('.img:not(#img_' + imgName + ')').removeClass('active');
-    }
-
-    function toggleActive($elem, active) {
-      $elem.toggleClass('active', active);
-    }
-
-    function updateImageCache(imgs) {
-      var $mainImg = $('#mainImg');
-      $mainImg.find('.img').each(function(i, $img) {
-        var imgName = $img.id.substring("img_".length);
-        if ($.inArray(imgName, imgs) == -1) {
-          $img.remove();
-        }
-      });
-      $.each(imgs, function(i, img) {
-        getImage(img, getImageUrl);
-      });
-    }
-
-    function getImage(imgName, getImageUrl) {
-        var $mainImg = $('#mainImg');
-        var $img = $mainImg.find('.img#img_' + imgName);
-        if ($img.length == 0) {
-        $img = $('<div id="img_' + imgName + '" class="img"></div>');
-        var imgUrl = 'url(' + getImageUrl(imgName) + ')';
-        $img.css('background-image', imgUrl);
-        $mainImg.append($img);
-        }
-        return $img;
+    if (map.isStatic(cell)) {
+      var uiState = staticMode.getUiState(pos, map);
+      tryCallback(pos, map, uiState);
+      staticMode.render(uiState, map, setPosition, getImageUrl);
+    } else if (map.isPano(cell)) {
+      var uiState = panoMode.getUiState(pos, map);
+      tryCallback(pos, map, uiState);
+      panoMode.render(uiState, map, setPosition, getImageUrl);
     }
   }
 
