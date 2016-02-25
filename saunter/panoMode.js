@@ -4,6 +4,8 @@ define('saunter/panoMode', [
 ],
 function ($, model) {
 
+  var panos = {};
+
   return {
       getUiState: function(pos, map) {
           return new UiState(pos, map);
@@ -24,7 +26,39 @@ function ($, model) {
     var $mainImg = $('#mainImg');
     var $targets = $('#targets');
 
-    $mainImg.find('.pano').remove();
+    $targets.find('.target').off().remove();
+    $.each(uiState.targets, function(i, target) {
+      var $target = $('<div class="target target' + i + '"></div>');
+      $targets.append($target);
+
+      $target.on('click', function() {
+        var newPos = new model.Position(target.dest_x, target.dest_y, target.angle);
+        setPosition(newPos, map, getImageUrl);
+      });
+    });
+
+    var $container = getPano(uiState, getImageUrl, $mainImg, $targets);
+
+    $targets.on('mousedown', '.target', function(e) {
+      var event = new MouseEvent('mousedown', e.originalEvent)
+      $container.find('div > div').get(0).dispatchEvent(event);
+    });
+  }
+
+  function getPano(uiState, getImageUrl, $mainImg, $targets) {
+    $mainImg.find('.pano').removeClass('active');
+
+    if (panos.hasOwnProperty(uiState.img)) {
+      var pano = panos[uiState.img];
+      var $container = pano.$container;
+      var PSV = pano.PSV;
+
+      $container.addClass('active');
+      PSV.moveTo(uiState.initAngle + 'deg', 0);
+
+      return $container;
+    }
+
     var $container = $('<div class="img pano active"></div>');
     $mainImg.append($container);
 
@@ -51,19 +85,9 @@ function ($, model) {
     PSV.addAction('position-updated', function(e) {updateFunc(e.longitude * 180 / Math.PI);});
     PSV.addAction('ready', function() {updateFunc(uiState.initAngle);});
 
-    $targets.find('.target').off().remove();
-    $.each(uiState.targets, function(i, target) {
-      var $target = $('<div class="target target' + i + '"></div>');
-      $targets.append($target);
-      $target.on('click', function() {
-        var newPos = new model.Position(target.dest_x, target.dest_y, target.angle);
-        setPosition(newPos, map, getImageUrl);
-      });
-    });
-    $targets.on('mousedown', '.target', function(e) {
-      var event = new MouseEvent('mousedown', e.originalEvent)
-      $container.find('div > div').get(0).dispatchEvent(event);
-    });
+    panos[uiState.img] = { $container: $container, PSV: PSV };
+
+    return $container;
   }
 
   function getUpdatePano(targets, vFOV, $targets, $container) {
