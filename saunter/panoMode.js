@@ -4,6 +4,7 @@ define('saunter/panoMode', [
 ],
 function ($, model) {
 
+  var panoKeys = [];
   var panos = {};
   var currentTargets = [];
 
@@ -29,19 +30,23 @@ function ($, model) {
 
     currentTargets = uiState.targets;
 
+    var imagesToLoad = [uiState.img];
+
     $targets.find('.target').off().remove();
     $.each(currentTargets, function(i, target) {
       var $target = $('<div class="target target' + i + '"></div>');
       $targets.append($target);
 
       var targetImg = map.getCell(target.dest_x, target.dest_y).pano;
-      preload(targetImg, getImageUrl, $mainImg, $targets);
+      imagesToLoad.push(targetImg);
 
       $target.on('click', function() {
         var newPos = new model.Position(target.dest_x, target.dest_y, target.angle);
         setPosition(newPos, map, getImageUrl);
       });
     });
+
+    preload(imagesToLoad, getImageUrl, $mainImg, $targets);
 
     $mainImg.find('.pano').removeClass('active');
 
@@ -67,12 +72,33 @@ function ($, model) {
     pano.$container.addClass('active');
   }
 
-  function preload(img, getImageUrl, $mainImg, $targets) {
-    getLoadedPano(img, function(pano) {
-      if (pano == null) {
-        createPano(img, getImageUrl, $mainImg, $targets, function(pano) {});
+  function preload(imagesToLoad, getImageUrl, $mainImg, $targets) {
+    var imagesToUnload = [];
+    
+    for (var i = 0; i < panoKeys.length; i++) {
+      if (imagesToLoad.indexOf(panoKeys[i]) == -1) {
+        imagesToUnload.push(panoKeys[i]);
       }
-    });
+    }
+
+    for (var i = 0; i < imagesToUnload.length; i++) {
+      unloadPano(imagesToUnload[i]);
+    }
+    
+    for (var i = 0; i < imagesToLoad.length; i++) {
+      if (panoKeys.indexOf(imagesToLoad[i]) == -1) {
+        createPano(imagesToLoad[i], getImageUrl, $mainImg, $targets, function(pano) {});
+      }
+    }
+  }
+
+  function unloadPano(img) {
+    console.log('Unloading: ' + img);
+    panoKeys.splice(panoKeys.indexOf(img), 1);
+    var pano = panos[img];
+    pano.PSV = null;
+    pano.$container.remove();
+    delete panos[img];
   }
 
   function getLoadedPano(img, callback) {
@@ -131,6 +157,7 @@ function ($, model) {
     });
 
     panos[img] = pano;
+    panoKeys.push(img);
 
     return pano;
   }
