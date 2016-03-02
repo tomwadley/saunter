@@ -5,6 +5,7 @@ define('saunter/panoMode', [
 function ($, model) {
 
   var panos = {};
+  var currentTargets = [];
 
   return {
       getUiState: function(pos, map) {
@@ -26,10 +27,15 @@ function ($, model) {
     var $mainImg = $('#mainImg');
     var $targets = $('#targets');
 
+    currentTargets = uiState.targets;
+
     $targets.find('.target').off().remove();
-    $.each(uiState.targets, function(i, target) {
+    $.each(currentTargets, function(i, target) {
       var $target = $('<div class="target target' + i + '"></div>');
       $targets.append($target);
+
+      var targetImg = map.getCell(target.dest_x, target.dest_y).pano;
+      preload(targetImg, getImageUrl, $mainImg, $targets);
 
       $target.on('click', function() {
         var newPos = new model.Position(target.dest_x, target.dest_y, target.angle);
@@ -37,35 +43,71 @@ function ($, model) {
       });
     });
 
-    var $container = getPano(uiState, getImageUrl, $mainImg, $targets);
+    $mainImg.find('.pano').removeClass('active');
 
-    $targets.on('mousedown', '.target', function(e) {
-      var event = new MouseEvent('mousedown', e.originalEvent)
-      $container.find('div > div').get(0).dispatchEvent(event);
+    getLoadedPano(uiState.img, function(pano) {
+      if (pano != null) {
+        activatePano(pano, uiState.initAngle);
+      } else {
+        console.log("Pano was not preloaded - creating...");
+        pano = createPano(uiState.img, getImageUrl, $mainImg, $targets, function(pano) {
+          activatePano(pano, uiState.initAngle);
+        });
+      }
+
+      $targets.on('mousedown', '.target', function(e) {
+        var event = new MouseEvent('mousedown', e.originalEvent)
+        pano.$container.find('div > div').get(0).dispatchEvent(event);
+      });
     });
   }
 
-  function getPano(uiState, getImageUrl, $mainImg, $targets) {
-    $mainImg.find('.pano').removeClass('active');
+  function activatePano(pano, angle) {
+    pano.PSV.moveTo(angle + 'deg', 0);
+    pano.$container.addClass('active');
+  }
 
-    if (panos.hasOwnProperty(uiState.img)) {
-      var pano = panos[uiState.img];
-      var $container = pano.$container;
-      var PSV = pano.PSV;
+  function preload(img, getImageUrl, $mainImg, $targets) {
+    getLoadedPano(img, function(pano) {
+      if (pano == null) {
+        createPano(img, getImageUrl, $mainImg, $targets, function(pano) {});
+      }
+    });
+  }
 
-      $container.addClass('active');
-      PSV.moveTo(uiState.initAngle + 'deg', 0);
-
-      return $container;
+  function getLoadedPano(img, callback) {
+    var count = 20;
+    poll();
+    function poll() {
+      if (panos.hasOwnProperty(img)) {
+        var pano = panos[img];
+        if (!pano.ready) {
+          console.log('Pano not ready...');
+          count--;
+          if (count == 0) {
+            console.log('Giving up on pano:' + img);
+          } else {
+            setTimeout(poll, 200);
+          }
+        } else {
+          callback(pano);
+        }
+      } else {
+        callback(null);
+      }
     }
+  }
 
-    var $container = $('<div class="img pano active"></div>');
+  function createPano(img, getImageUrl, $mainImg, $targets, callback) {
+    console.log('Creating pano: ' + img);
+
+    var $container = $('<div class="img pano"></div>');
     $mainImg.append($container);
 
     var vFOV = 45;
 
     var PSV = new PhotoSphereViewer({
-      panorama: getImageUrl(uiState.img),
+      panorama: getImageUrl(img),
       container: $container.get(0),
       autoload: true,
       usexmpdata: true,
@@ -76,23 +118,26 @@ function ($, model) {
       min_fov: vFOV,
       max_fov: vFOV,
       tilt_up_max: 0,
-      tilt_down_max: 0,
-      default_position: {
-        long: uiState.initAngle + 'deg'
-      }
+      tilt_down_max: 0
     });
-    var updateFunc = getUpdatePano(uiState.targets, vFOV, $targets, $container);
+
+    var pano = { $container: $container, PSV: PSV, ready: false };
+
+    var updateFunc = getUpdatePano(vFOV, $targets, $container);
     PSV.addAction('position-updated', function(e) {updateFunc(e.longitude * 180 / Math.PI);});
-    PSV.addAction('ready', function() {updateFunc(uiState.initAngle);});
+    PSV.addAction('ready', function() {
+      pano.ready = true;
+      callback(pano);
+    });
 
-    panos[uiState.img] = { $container: $container, PSV: PSV };
+    panos[img] = pano;
 
-    return $container;
+    return pano;
   }
 
-  function getUpdatePano(targets, vFOV, $targets, $container) {
+  function getUpdatePano(vFOV, $targets, $container) {
     return function(angle) {
-      $.each(targets, function(i, target) {
+      $.each(currentTargets, function(i, target) {
         var $target = $targets.find('.target.target' + i);
 
         var width = $container.width();
