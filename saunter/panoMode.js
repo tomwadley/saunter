@@ -9,10 +9,11 @@ function ($, model) {
   var currentTargets = [];
 
   return {
-      getUiState: function(pos, map) {
-          return new UiState(pos, map);
-      },
-      render: render
+    getUiState: function(pos, map) {
+      return new UiState(pos, map);
+    },
+    render: render,
+    disable: disable
   };
 
   function UiState(pos, map) {
@@ -20,11 +21,13 @@ function ($, model) {
 
     var cell = map.getCell(pos.x, pos.y);
     this.img = cell.pano;
-    this.initAngle = pos.direction;
+    this.initAngle = pos.angle;
     this.targets = cell.targets
   }
 
   function render(uiState, map, setPosition, getImageUrl) {
+    disable();
+
     var $mainImg = $('#mainImg');
     var $targets = $('#targets');
 
@@ -32,13 +35,16 @@ function ($, model) {
 
     var imagesToLoad = [uiState.img];
 
-    $targets.find('.target').off().remove();
     $.each(currentTargets, function(i, target) {
       var $target = $('<div class="target target' + i + '"></div>');
       $targets.append($target);
 
-      var targetImg = map.getCell(target.dest_x, target.dest_y).pano;
-      imagesToLoad.push(targetImg);
+      var targetCell = map.getCell(target.dest_x, target.dest_y);
+      if (map.isPano(targetCell)) {
+        imagesToLoad.push(targetCell.pano);
+      } else {
+        console.log('not pano!');
+      }
 
       $target.on('click', function() {
         var newPos = new model.Position(target.dest_x, target.dest_y, target.angle);
@@ -65,6 +71,11 @@ function ($, model) {
         pano.$container.find('div > div').get(0).dispatchEvent(event);
       });
     });
+  }
+
+  function disable() {
+    var $targets = $('#targets');
+    $targets.find('.target').off().remove();
   }
 
   function activatePano(pano, angle) {

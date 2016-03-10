@@ -2,10 +2,17 @@ define('saunter/model', [],
 function () {
 
   return {
-    Position: function(x, y, direction) {
+    Position: function(x, y, angleOrDirection) {
       this.x = x;
       this.y = y;
-      this.direction = direction;
+      if (typeof(angleOrDirection) === "number") {
+        this.angle = angleOrDirection;
+        this.direction = "north"; // TODO: calculate this for better pano->static jump
+      }
+      if (typeof(angleOrDirection) === "string") {
+        this.direction = angleOrDirection;
+        this.angle = 0; // TODO: calculate this for better static->pano jump
+      }
     },
     Map: function(cellMap) {
       this.getCell = function(x, y) {

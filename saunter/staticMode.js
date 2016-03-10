@@ -5,10 +5,11 @@ define('saunter/staticMode', [
 function ($, model) {
 
   return {
-      getUiState: function(pos, map) {
-          return new UiState(pos, map);
-      },
-      render: render
+    getUiState: function(pos, map) {
+      return new UiState(pos, map);
+    },
+    render: render,
+    disable: disable
   };
 
   function UiState(pos, map) {
@@ -59,6 +60,7 @@ function ($, model) {
       return new model.Position(pos.x + deltas.x, pos.y + deltas.y, pos.direction);
     }
 
+    // TODO: extend this to allow static->pano jump
     function positionExists(pos) {
       if (!pos) return false;
       var cell = map.getCell(pos.x, pos.y);
@@ -119,10 +121,6 @@ function ($, model) {
       $mainImg.find('.img:not(#img_' + imgName + ')').removeClass('active');
     }
 
-    function toggleActive($elem, active) {
-      $elem.toggleClass('active', active);
-    }
-
     function updateImageCache(imgs) {
       var $mainImg = $('#mainImg');
       $mainImg.find('.img').each(function(i, $img) {
@@ -147,5 +145,19 @@ function ($, model) {
       }
       return $img;
     }
+  }
+
+  function toggleActive($elem, active) {
+    $elem.toggleClass('active', active);
+  }
+
+  function disable() {
+    var $forwards = $('#forwards');
+    var $left = $('#left');
+    var $right = $('#right');
+
+    toggleActive($forwards, false);
+    toggleActive($left, false);
+    toggleActive($right, false);
   }
 });

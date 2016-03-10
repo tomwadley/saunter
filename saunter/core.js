@@ -128,10 +128,12 @@ function ($, model, staticMode, panoMode) {
       var uiState = staticMode.getUiState(pos, map);
       tryCallback(pos, map, uiState);
       staticMode.render(uiState, map, setPosition, getImageUrl);
+      panoMode.disable();
     } else if (map.isPano(cell)) {
       var uiState = panoMode.getUiState(pos, map);
       tryCallback(pos, map, uiState);
       panoMode.render(uiState, map, setPosition, getImageUrl);
+      staticMode.disable();
     }
   }
 
