@@ -124,19 +124,13 @@ function ($, model) {
   }
 
   function getLoadedPano(img, callback) {
-    var count = 20;
     poll();
     function poll() {
       if (panos.hasOwnProperty(img)) {
         var pano = panos[img];
         if (!pano.ready) {
           console.log('Pano not ready...');
-          count--;
-          if (count == 0) {
-            console.log('Giving up on pano:' + img);
-          } else {
-            setTimeout(poll, 200);
-          }
+          setTimeout(poll, 200);
         } else {
           callback(pano);
         }
