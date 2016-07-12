@@ -1,14 +1,13 @@
 module.exports = function(grunt) {
   var BUILD_DIR = 'build/';
-  var map = grunt.option('map') || 'test-map.json';
+  var staticMapTemplate = grunt.option('map') || 'test-map_staticMapTemplate.json';
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     exec: {
       jamInstall: '$(npm bin)/jam install',
       jamCompile: '$(npm bin)/jam compile -i saunter/main -o compiled.js',
-      prepareMapProd: ('./prepareMap ' + map + ' ' + BUILD_DIR),
-      prepareMapDev: ('./prepareMap ' + map)
+      prepareStaticMap: ('./prepareStaticMap ' + staticMapTemplate)
     },
     curl: {
       photo_sphere_viewer: {
@@ -30,7 +29,8 @@ module.exports = function(grunt) {
         files: [{ 
           src: [
             'main.css',
-            'compiled.js'
+            'compiled.js',
+            'vendor/**'
           ], 
           dest: BUILD_DIR
         }]
@@ -77,7 +77,6 @@ module.exports = function(grunt) {
     'curl:photo_sphere_viewer',
     'unzip:photo_sphere_viewer',
     'exec:jamCompile', 
-    'exec:prepareMapProd', 
     'copy', 
     'replace', 
     'cacheBust'
@@ -87,7 +86,10 @@ module.exports = function(grunt) {
     'exec:jamInstall', 
     'curl:photo_sphere_viewer',
     'unzip:photo_sphere_viewer',
-    'exec:prepareMapDev'
+  ]);
+
+  grunt.registerTask('prepareStaticMap', [
+    'exec:prepareStaticMap'
   ]);
 
   grunt.registerTask('default', 'dev');
