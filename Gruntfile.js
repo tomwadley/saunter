@@ -12,7 +12,7 @@ module.exports = function(grunt) {
     },
     curl: {
       photo_sphere_viewer: {
-        src: 'https://github.com/JeremyHeleine/Photo-Sphere-Viewer/archive/v2.5.zip',
+        src: 'https://github.com/JeremyHeleine/Photo-Sphere-Viewer/archive/v2.7.zip',
         dest: 'tmp/photo-sphere-viewer.zip'
       }
     },

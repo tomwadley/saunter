@@ -46,7 +46,7 @@ function ($, model) {
         console.log('not pano!');
       }
 
-      $target.on('click', function() {
+      onClickOnly($target, function() {
         var newPos = new model.Position(target.dest_x, target.dest_y, target.angle);
         setPosition(newPos, map, getImageUrl);
       });
@@ -69,6 +69,17 @@ function ($, model) {
       $targets.on('mousedown', '.target', function(e) {
         var event = new MouseEvent('mousedown', e.originalEvent)
         pano.$container.find('div > div').get(0).dispatchEvent(event);
+      });
+    });
+  }
+
+  function onClickOnly($target, func) {
+    $target.on('mousedown', function() {
+      $target.on('mouseup mousemove', function handler(ev) {
+        if (ev.type == 'mouseup') {
+          func();
+        }
+        $target.off('mouseup mousemove', handler);
       });
     });
   }
@@ -141,27 +152,26 @@ function ($, model) {
     var $container = $('<div class="img pano"></div>');
     $mainImg.append($container);
 
-    var vFOV = 45;
+    var vFOV = 75;
 
     var PSV = new PhotoSphereViewer({
       panorama: getImageUrl(img),
       container: $container.get(0),
       autoload: true,
-      usexmpdata: true,
       allow_user_interactions: true,
       allow_scroll_to_zoon: false,
       time_anim: false,
       navbar: false,
       min_fov: vFOV,
-      max_fov: vFOV,
-      tilt_up_max: 0,
-      tilt_down_max: 0
+      max_fov: vFOV
     });
 
     var pano = { $container: $container, PSV: PSV, ready: false };
 
     var updateFunc = getUpdatePano(vFOV, $targets, $container);
-    PSV.addAction('position-updated', function(e) {updateFunc(e.longitude * 180 / Math.PI);});
+    PSV.addAction('position-updated', function(e) {
+      updateFunc(e.longitude * 180 / Math.PI, e.latitude * 180 / Math.PI);
+    });
     PSV.addAction('ready', function() {
       pano.ready = true;
       callback(pano);
@@ -174,7 +184,7 @@ function ($, model) {
   }
 
   function getUpdatePano(vFOV, $targets, $container) {
-    return function(angle) {
+    return function(hAngle, vAngle) {
       $.each(currentTargets, function(i, target) {
         var $target = $targets.find('.target.target' + i);
 
@@ -183,16 +193,21 @@ function ($, model) {
         
         var hFOV = getHorizontalFieldOfView(width, height, vFOV);
 
-        var targetPositionPrc = getTargetPositionAsPercentage(angle, hFOV, target.angle);
+        var targetLeftPrc = getTargetPositionAsPercentage(hAngle, hFOV, target.angle);
+        var targetTopPrc = getTargetPositionAsPercentage(vAngle, vFOV, 1);
 
-        if (targetPositionPrc === null) {
+        if (targetLeftPrc === null || targetTopPrc === null) {
           $target.removeClass('active');
         } else {
-          var position = targetPositionPrc * width;
-          position -= $target.width() / 2
+          var leftPosition = targetLeftPrc * width;
+          leftPosition -= $target.width() / 2
+
+          var topPosition = targetTopPrc * height;
+          topPosition -= $target.height() / 2
           
           $target.addClass('active');
-          $target.css('left', position);
+          $target.css('left', leftPosition);
+          $target.css('top', topPosition);
         }
       });
     }
