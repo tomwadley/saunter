@@ -30,7 +30,9 @@ module.exports = function(grunt) {
           src: [
             'main.css',
             'compiled.js',
-            'vendor/**'
+            'vendor/**',
+            'map.json',
+            'index.html'
           ], 
           dest: BUILD_DIR
         }]
@@ -44,14 +46,14 @@ module.exports = function(grunt) {
           ]
         },
         files: [
-          { src: ['index.html'], dest: BUILD_DIR }
+          { src: ['saunter.html'], dest: BUILD_DIR }
         ]
       }
     },
     cacheBust: {
       assets: {
         files: [{
-          src: [BUILD_DIR + 'index.html']
+          src: [BUILD_DIR + 'saunter.html']
         }]
       }
     },

@@ -1,0 +1,131 @@
+{
+  "metadata": {
+    "name": "thirty",
+    "version": "1.0",
+    "description": "Thirty",
+    "imagePrefix": "https://d35t1ks127q780.cloudfront.net/",
+    "imageSuffix": ".jpg"
+  },
+  "init": {
+    "x": 0,
+    "y": 0,
+    "direction": 218
+  },
+  "cells": [
+    {
+      "x": "0",
+      "y": "0",
+      "pano": "saunterglass_00190-w",
+      "targets": [
+        { "angle": 218, "dest_x": 1, "dest_y": 0}
+      ]
+    },
+    {
+      "x": "1",
+      "y": "0",
+      "pano": "saunterglass_00191",
+      "targets": [
+        { "angle": 38, "dest_x": 0, "dest_y": 0},
+        { "angle": 194, "dest_x": 2, "dest_y": 0}
+      ]
+    },
+    {
+      "x": "2",
+      "y": "0",
+      "pano": "saunterglass_00192",
+      "targets": [
+        { "angle": 14, "dest_x": 1, "dest_y": 0},
+        { "angle": 200, "dest_x": 3, "dest_y": 0}
+      ]
+    },
+    {
+      "x": "3",
+      "y": "0",
+      "pano": "saunterglass_00193",
+      "targets": [
+        { "angle": 20, "dest_x": 2, "dest_y": 0},
+        { "angle": 203, "dest_x": 4, "dest_y": 0}
+      ]
+    },
+    {
+      "x": "4",
+      "y": "0",
+      "pano": "saunterglass_00194",
+      "targets": [
+        { "angle": 23, "dest_x": 3, "dest_y": 0},
+        { "angle": 204, "dest_x": 5, "dest_y": 0}
+      ]
+    },
+    {
+      "x": "5",
+      "y": "0",
+      "pano": "saunterglass_00195",
+      "targets": [
+        { "angle": 24, "dest_x": 4, "dest_y": 0},
+        { "angle": 197, "dest_x": 6, "dest_y": 0}
+      ]
+    },
+    {
+      "x": "6",
+      "y": "0",
+      "pano": "saunterglass_00196",
+      "targets": [
+        { "angle": 17, "dest_x": 5, "dest_y": 0},
+        { "angle": 211, "dest_x": 7, "dest_y": 0}
+      ]
+    },
+    {
+      "x": "7",
+      "y": "0",
+      "pano": "saunterglass_00197",
+      "targets": [
+        { "angle": 31, "dest_x": 6, "dest_y": 0},
+        { "angle": 184, "dest_x": 8, "dest_y": 0}
+      ]
+    },
+    {
+      "x": "8",
+      "y": "0",
+      "pano": "saunterglass_00198",
+      "targets": [
+        { "angle": 4, "dest_x": 7, "dest_y": 0},
+        { "angle": 193, "dest_x": 9, "dest_y": 0}
+      ]
+    },
+    {
+      "x": "9",
+      "y": "0",
+      "pano": "saunterglass_00199",
+      "targets": [
+        { "angle": 13, "dest_x": 8, "dest_y": 0},
+        { "angle": 183, "dest_x": 10, "dest_y": 0}
+      ]
+    },
+    {
+      "x": "10",
+      "y": "0",
+      "pano": "saunterglass_00200",
+      "targets": [
+        { "angle": 3, "dest_x": 9, "dest_y": 0},
+        { "angle": 213, "dest_x": 11, "dest_y": 0}
+      ]
+    },
+    {
+      "x": "11",
+      "y": "0",
+      "pano": "saunterglass_00201",
+      "targets": [
+        { "angle": 33, "dest_x": 10, "dest_y": 0},
+        { "angle": 197, "dest_x": 12, "dest_y": 0}
+      ]
+    },
+    {
+      "x": "12",
+      "y": "0",
+      "pano": "saunterglass_00202",
+      "targets": [
+        { "angle": 17, "dest_x": 11, "dest_y": 0}
+      ]
+    }
+  ]
+}
