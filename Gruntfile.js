@@ -5,9 +5,19 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     exec: {
-      jamInstall: '$(npm bin)/jam install',
-      jamCompile: '$(npm bin)/jam compile -i saunter/main -o compiled.js',
       prepareStaticMap: ('./prepareStaticMap ' + staticMapTemplate)
+    },
+    requirejs: {
+      compile: {
+        options: {
+          baseUrl: '.',
+          name: 'main',
+          mainConfigFile: 'main.js',
+          paths: {requireLib: 'require'},
+          include: 'requireLib',
+          out: BUILD_DIR + 'require.js'
+        }
+      }
     },
     curl: {
       photo_sphere_viewer: {
@@ -25,27 +35,23 @@ module.exports = function(grunt) {
       }
     },
     copy: {
-      main: {
+      require: {
+        files: [{
+          src: ['node_modules/requirejs/require.js'],
+          dest: './',
+          flatten: true,
+          expand: true
+        }]
+      },
+      build: {
         files: [{ 
           src: [
             'main.css',
-            'compiled.js',
+            'index.html',
             'vendor/**'
           ], 
           dest: BUILD_DIR
         }]
-      }
-    },
-    replace: {
-      dist: {
-        options: {
-          patterns: [
-            { match: /jam\/require\.js/g, replacement: 'compiled.js' }
-          ]
-        },
-        files: [
-          { src: ['index.html'], dest: BUILD_DIR }
-        ]
       }
     },
     cacheBust: {
@@ -57,8 +63,7 @@ module.exports = function(grunt) {
     },
     clean: [
       BUILD_DIR,
-      'jam',
-      'compiled.js',
+      'require.js',
       'vendor',
       'tmp'
     ]
@@ -66,26 +71,25 @@ module.exports = function(grunt) {
 
   grunt.loadNpmTasks('grunt-exec');
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-replace');
   grunt.loadNpmTasks('grunt-cache-bust');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-curl');
   grunt.loadNpmTasks('grunt-zip');
+  grunt.loadNpmTasks('grunt-contrib-requirejs');
 
   grunt.registerTask('prod', [
-    'exec:jamInstall', 
     'curl:photo_sphere_viewer',
     'unzip:photo_sphere_viewer',
-    'exec:jamCompile', 
-    'copy', 
-    'replace', 
+    'copy:require',
+    'requirejs',
+    'copy:build',
     'cacheBust'
   ]);
 
   grunt.registerTask('dev', [
-    'exec:jamInstall', 
     'curl:photo_sphere_viewer',
     'unzip:photo_sphere_viewer',
+    'copy:require'
   ]);
 
   grunt.registerTask('prepareStaticMap', [
